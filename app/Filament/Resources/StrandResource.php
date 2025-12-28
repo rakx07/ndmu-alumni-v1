@@ -3,62 +3,60 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StrandResource\Pages;
-use App\Filament\Resources\StrandResource\RelationManagers;
 use App\Models\Strand;
-use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class StrandResource extends Resource
 {
     protected static ?string $model = Strand::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-queue-list';
+    protected static ?string $navigationLabel = 'SHS Strands';
+    protected static ?string $navigationGroup = 'Reference Data';
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //
-            ]);
+        return $form->schema([
+            TextInput::make('name')
+                ->label('Strand Name')
+                ->required()
+                ->maxLength(100)
+                ->unique(ignoreRecord: true),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
-            ])
-            ->filters([
-                //
+                TextColumn::make('name')
+                    ->label('Strand')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListStrands::route('/'),
+            'index'  => Pages\ListStrands::route('/'),
             'create' => Pages\CreateStrand::route('/create'),
-            'edit' => Pages\EditStrand::route('/{record}/edit'),
+            'edit'   => Pages\EditStrand::route('/{record}/edit'),
         ];
     }
 }

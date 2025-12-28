@@ -3,54 +3,52 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CollegeResource\Pages;
-use App\Filament\Resources\CollegeResource\RelationManagers;
 use App\Models\College;
-use Filament\Forms;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CollegeResource extends Resource
 {
     protected static ?string $model = College::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-library';
+    protected static ?string $navigationLabel = 'Colleges';
+    protected static ?string $navigationGroup = 'Reference Data';
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //
-            ]);
+        return $form->schema([
+            TextInput::make('name')
+                ->label('College Name')
+                ->required()
+                ->maxLength(255)
+                ->unique(ignoreRecord: true),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
-            ])
-            ->filters([
-                //
+                TextColumn::make('name')
+                    ->label('College Name')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
