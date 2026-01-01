@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider; // ✅ ADD THIS
 
 class SocialAuthController extends Controller
 {
@@ -16,13 +17,18 @@ class SocialAuthController extends Controller
 
     public function callback(string $provider)
     {
-        $socialUser = Socialite::driver($provider)->stateless()->user();
+        /** @var AbstractProvider $driver */ // ✅ CAST IS HERE
+        $driver = Socialite::driver($provider);
+
+        $socialUser = $driver->stateless()->user();
 
         // Use email as identity
         $user = User::updateOrCreate(
             ['email' => $socialUser->getEmail()],
             [
-                'name' => $socialUser->getName() ?: $socialUser->getNickname() ?: 'Alumni User',
+                'name' => $socialUser->getName()
+                    ?: $socialUser->getNickname()
+                    ?: 'Alumni User',
                 'provider' => $provider,
                 'provider_id' => $socialUser->getId(),
             ]
@@ -30,7 +36,6 @@ class SocialAuthController extends Controller
 
         Auth::login($user);
 
-        // Redirect alumni to intake/dashboard page
         return redirect()->route('alumni.dashboard');
     }
 }
