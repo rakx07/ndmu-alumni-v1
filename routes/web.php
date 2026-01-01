@@ -27,5 +27,10 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'
     ->name('oauth.callback');
 
 
+Route::get('/alumni/dashboard', function () {
+    return view('alumni.dashboard');
+})->middleware(['auth'])->name('alumni.dashboard');
+
+
 
 require __DIR__.'/auth.php';
