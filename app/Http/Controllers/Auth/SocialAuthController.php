@@ -4,21 +4,25 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\AbstractProvider; // ✅ ADD THIS
+use Laravel\Socialite\Two\AbstractProvider;
 
 class SocialAuthController extends Controller
 {
     public function redirect(string $provider)
     {
-        return Socialite::driver($provider)->redirect();
+        return Socialite::driver($provider)
+            ->setHttpClient(new Client(config('socialite.guzzle')))
+            ->redirect();
     }
 
     public function callback(string $provider)
     {
-        /** @var AbstractProvider $driver */ // ✅ CAST IS HERE
-        $driver = Socialite::driver($provider);
+        /** @var AbstractProvider $driver */
+        $driver = Socialite::driver($provider)
+            ->setHttpClient(new Client(config('socialite.guzzle')));
 
         $socialUser = $driver->stateless()->user();
 
