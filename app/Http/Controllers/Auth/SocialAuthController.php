@@ -13,7 +13,11 @@ class SocialAuthController extends Controller
 {
     public function redirect(string $provider)
     {
-        return Socialite::driver($provider)
+        /** @var AbstractProvider $driver */
+        $driver = Socialite::driver($provider);
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        return $driver
             ->setHttpClient(new Client(config('socialite.guzzle')))
             ->redirect();
     }
@@ -21,8 +25,10 @@ class SocialAuthController extends Controller
     public function callback(string $provider)
     {
         /** @var AbstractProvider $driver */
-        $driver = Socialite::driver($provider)
-            ->setHttpClient(new Client(config('socialite.guzzle')));
+        $driver = Socialite::driver($provider);
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        $driver->setHttpClient(new Client(config('socialite.guzzle')));
 
         $socialUser = $driver->stateless()->user();
 
