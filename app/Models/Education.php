@@ -25,6 +25,15 @@ class Education extends Model
         'remarks',
     ];
 
+    /**
+     * ✅ Expose a unified display field for Filament/table views:
+     * - prefer Program relation label
+     * - fallback to level_label
+     */
+    protected $appends = [
+        'degree_program',
+    ];
+
     public function alumnus(): BelongsTo
     {
         return $this->belongsTo(Alumnus::class, 'alumnus_id');
@@ -43,5 +52,19 @@ class Education extends Model
     public function strand(): BelongsTo
     {
         return $this->belongsTo(Strand::class);
+    }
+
+    /**
+     * ✅ Accessor: $education->degree_program
+     * Adjust the program column name if needed.
+     */
+    public function getDegreeProgramAttribute(): string
+    {
+        // If your programs table uses a different column, change 'name' below:
+        // e.g. $this->program?->program_name
+        $programName = $this->program?->name;
+
+        return $programName
+            ?: ($this->level_label ?: '');
     }
 }

@@ -3,6 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AlumnusResource\Pages;
+use App\Filament\Resources\AlumnusResource\RelationManagers\AddressesRelationManager;
+use App\Filament\Resources\AlumnusResource\RelationManagers\CommunityInvolvementsRelationManager;
+use App\Filament\Resources\AlumnusResource\RelationManagers\ConsentRelationManager;
+use App\Filament\Resources\AlumnusResource\RelationManagers\EducationsRelationManager;
+use App\Filament\Resources\AlumnusResource\RelationManagers\EmploymentsRelationManager;
+use App\Filament\Resources\AlumnusResource\RelationManagers\ProfileRelationManager;
 use App\Models\Alumnus;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
@@ -95,8 +101,8 @@ class AlumnusResource extends Resource
     }
 
     /**
-     * ✅ This powers the ViewAction page.
-     * Update the field names here to match your actual columns/relations.
+     * ✅ Filament "View" page content
+     * - Reads Permanent/Current from addresses(type)
      */
     public static function infolist(Infolist $infolist): Infolist
     {
@@ -125,9 +131,6 @@ class AlumnusResource extends Resource
                     TextEntry::make('student_number')->label('Student #')->placeholder('—')->copyable(),
                 ]),
 
-            // ✅ If you have these relations, this will show them.
-            // If your relation names differ, tell me your model relations and I'll adjust quickly.
-
             InfoSection::make('Contact / Profile')
                 ->columns(3)
                 ->schema([
@@ -137,48 +140,46 @@ class AlumnusResource extends Resource
                 ])
                 ->collapsed(),
 
+            /**
+             * ✅ Addresses (reads from addresses relationship + type enum)
+             */
             InfoSection::make('Addresses')
                 ->schema([
                     Grid::make(2)->schema([
                         InfoSection::make('Permanent Address')
+                            ->columns(2)
                             ->schema([
-                                TextEntry::make('permanentAddress.line1')->label('Line 1')->placeholder('—'),
-                                TextEntry::make('permanentAddress.line2')->label('Line 2')->placeholder('—'),
-                                TextEntry::make('permanentAddress.city')->label('City')->placeholder('—'),
-                                TextEntry::make('permanentAddress.province')->label('Province')->placeholder('—'),
-                                TextEntry::make('permanentAddress.country')->label('Country')->placeholder('—'),
-                                TextEntry::make('permanentAddress.postal_code')->label('Postal Code')->placeholder('—'),
-                            ])
-                            ->columns(2),
+                                TextEntry::make('perm_line1')->label('Line 1')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'permanent'))->line1 ?? '—'),
+                                TextEntry::make('perm_line2')->label('Line 2')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'permanent'))->line2 ?? '—'),
+                                TextEntry::make('perm_city')->label('City')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'permanent'))->city ?? '—'),
+                                TextEntry::make('perm_province')->label('Province')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'permanent'))->province ?? '—'),
+                                TextEntry::make('perm_country')->label('Country')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'permanent'))->country ?? '—'),
+                                TextEntry::make('perm_postal')->label('Postal Code')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'permanent'))->postal_code ?? '—'),
+                            ]),
 
                         InfoSection::make('Current Address')
+                            ->columns(2)
                             ->schema([
-                                TextEntry::make('currentAddress.line1')->label('Line 1')->placeholder('—'),
-                                TextEntry::make('currentAddress.line2')->label('Line 2')->placeholder('—'),
-                                TextEntry::make('currentAddress.city')->label('City')->placeholder('—'),
-                                TextEntry::make('currentAddress.province')->label('Province')->placeholder('—'),
-                                TextEntry::make('currentAddress.country')->label('Country')->placeholder('—'),
-                                TextEntry::make('currentAddress.postal_code')->label('Postal Code')->placeholder('—'),
-                            ])
-                            ->columns(2),
+                                TextEntry::make('cur_line1')->label('Line 1')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'current'))->line1 ?? '—'),
+                                TextEntry::make('cur_line2')->label('Line 2')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'current'))->line2 ?? '—'),
+                                TextEntry::make('cur_city')->label('City')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'current'))->city ?? '—'),
+                                TextEntry::make('cur_province')->label('Province')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'current'))->province ?? '—'),
+                                TextEntry::make('cur_country')->label('Country')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'current'))->country ?? '—'),
+                                TextEntry::make('cur_postal')->label('Postal Code')
+                                    ->state(fn ($record) => optional($record->addresses->firstWhere('type', 'current'))->postal_code ?? '—'),
+                            ]),
                     ]),
-                ])
-                ->collapsed(),
-
-            InfoSection::make('Employment')
-                ->columns(3)
-                ->schema([
-                    TextEntry::make('employment.position')->label('Position')->placeholder('—'),
-                    TextEntry::make('employment.company')->label('Company')->placeholder('—'),
-                    TextEntry::make('employment.org_type')->label('Organization Type')->placeholder('—'),
-
-                    TextEntry::make('employment.start_date')->label('Start Date')->date('M d, Y')->placeholder('—'),
-                    TextEntry::make('employment.office_contact')->label('Office Contact')->placeholder('—'),
-                    TextEntry::make('employment.office_email')->label('Office Email')->placeholder('—'),
-
-                    TextEntry::make('employment.office_address')->label('Office Address')->placeholder('—')->columnSpanFull(),
-                    TextEntry::make('employment.licenses')->label('Licenses / Certifications')->placeholder('—')->columnSpanFull(),
-                    TextEntry::make('employment.achievements')->label('Achievements')->placeholder('—')->columnSpanFull(),
                 ])
                 ->collapsed(),
 
@@ -236,26 +237,25 @@ class AlumnusResource extends Resource
     }
 
     public static function getRelations(): array
-{
-    return [
-        \App\Filament\Resources\AlumnusResource\RelationManagers\ProfileRelationManager::class,
-        \App\Filament\Resources\AlumnusResource\RelationManagers\AddressesRelationManager::class,
-        \App\Filament\Resources\AlumnusResource\RelationManagers\EducationsRelationManager::class,
-        \App\Filament\Resources\AlumnusResource\RelationManagers\EmploymentsRelationManager::class,
-        \App\Filament\Resources\AlumnusResource\RelationManagers\CommunityInvolvementsRelationManager::class,
-        \App\Filament\Resources\AlumnusResource\RelationManagers\ConsentRelationManager::class,
-    ];
-}
-
+    {
+        // ✅ You already have these files in your screenshot
+        return [
+            ProfileRelationManager::class,
+            AddressesRelationManager::class,
+            EducationsRelationManager::class,
+            EmploymentsRelationManager::class,
+            CommunityInvolvementsRelationManager::class,
+            ConsentRelationManager::class,
+        ];
+    }
 
     public static function getPages(): array
-{
-    return [
-        'index'  => Pages\ListAlumni::route('/'),
-        'create' => Pages\CreateAlumnus::route('/create'),
-        'view'   => Pages\ViewAlumnus::route('/{record}'),
-        'edit'   => Pages\EditAlumnus::route('/{record}/edit'),
-    ];
-}
-
+    {
+        return [
+            'index'  => Pages\ListAlumni::route('/'),
+            'create' => Pages\CreateAlumnus::route('/create'),
+            'view'   => Pages\ViewAlumnus::route('/{record}'),
+            'edit'   => Pages\EditAlumnus::route('/{record}/edit'),
+        ];
+    }
 }
