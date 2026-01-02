@@ -16,12 +16,11 @@ class EmploymentsRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Employment')
+            Forms\Components\Section::make('Employment Details')
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('position')
                         ->label('Position')
-                        ->required()
                         ->maxLength(255)
                         ->columnSpan(2),
 
@@ -33,42 +32,39 @@ class EmploymentsRelationManager extends RelationManager
                     Forms\Components\Select::make('org_type')
                         ->label('Organization Type')
                         ->options([
-                            'Government' => 'Government',
-                            'Private' => 'Private',
-                            'NGO' => 'NGO',
-                            'Academe' => 'Academe',
-                            'Self-employed' => 'Self-employed',
-                            'Business Owner' => 'Business Owner',
-                            'Student' => 'Student',
-                            'Others' => 'Others',
+                            'government'   => 'Government',
+                            'private'      => 'Private',
+                            'ngo'          => 'NGO',
+                            'academe'      => 'Academe',
+                            'self-employed'=> 'Self-employed',
                         ])
                         ->native(false),
 
                     Forms\Components\DatePicker::make('start_date')
                         ->label('Start Date'),
 
+                    Forms\Components\Textarea::make('office_address')
+                        ->label('Office Address')
+                        ->rows(3)
+                        ->columnSpan(2),
+
                     Forms\Components\TextInput::make('office_contact')
                         ->label('Office Contact')
-                        ->maxLength(100),
+                        ->maxLength(255),
 
                     Forms\Components\TextInput::make('office_email')
                         ->label('Office Email')
                         ->email()
                         ->maxLength(255),
 
-                    Forms\Components\Textarea::make('office_address')
-                        ->label('Office Address')
-                        ->rows(3)
-                        ->columnSpan(2),
-
-                    Forms\Components\Textarea::make('licenses')
+                    Forms\Components\TextInput::make('licenses')
                         ->label('Licenses / Certifications')
-                        ->rows(3)
+                        ->maxLength(255)
                         ->columnSpan(2),
 
-                    Forms\Components\Textarea::make('achievements')
+                    Forms\Components\TextInput::make('achievements')
                         ->label('Achievements')
-                        ->rows(3)
+                        ->maxLength(255)
                         ->columnSpan(2),
                 ]),
         ]);
@@ -79,11 +75,47 @@ class EmploymentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('position')
             ->columns([
-                Tables\Columns\TextColumn::make('position')->label('Position')->searchable()->wrap(),
-                Tables\Columns\TextColumn::make('company')->label('Company')->toggleable()->wrap(),
-                Tables\Columns\TextColumn::make('org_type')->label('Type')->toggleable(),
-                Tables\Columns\TextColumn::make('start_date')->label('Start')->date('M d, Y')->toggleable(),
+                Tables\Columns\TextColumn::make('position')
+                    ->label('Position')
+                    ->searchable()
+                    ->wrap(),
+
+                Tables\Columns\TextColumn::make('company')
+                    ->label('Company')
+                    ->searchable()
+                    ->wrap(),
+
+                Tables\Columns\TextColumn::make('org_type')
+                    ->label('Type')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'government' => 'Government',
+                        'private' => 'Private',
+                        'ngo' => 'NGO',
+                        'academe' => 'Academe',
+                        'self-employed' => 'Self-employed',
+                        default => $state ?: '—',
+                    }),
+
+                Tables\Columns\TextColumn::make('start_date')
+                    ->label('Start Date')
+                    ->date('M d, Y')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('office_email')
+                    ->label('Email')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('office_contact')
+                    ->label('Contact')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created')
+                    ->dateTime('M d, Y')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('start_date', 'desc')
             ->headerActions([
                 Tables\Actions\CreateAction::make(),
             ])

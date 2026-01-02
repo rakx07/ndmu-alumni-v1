@@ -271,7 +271,6 @@
                             <p class="{{ $cardDesc }}">Add degrees, courses, or certifications completed after NDMU.</p>
                         </div>
 
-                        {{-- SAFE one-liner assignments (avoids broken @php blocks) --}}
                         @php($postRows = old('post'))
 
                         @php(
@@ -350,7 +349,7 @@
                                 ? $commRows
                                 : collect($community ?? $communityRows ?? $community_items ?? [])->map(function ($c) {
                                     return [
-                                        'organization' => $c->organization ?? '',
+                                        'organization' => $c->organization ?? $c->organization_name ?? '',
                                         'role' => $c->role ?? '',
                                         'years_active' => $c->years_active ?? '',
                                     ];
@@ -407,6 +406,217 @@
                         </template>
                     </section>
 
+                    {{-- ✅ EMPLOYMENT STATUS + EMPLOYMENTS (NEW) --}}
+                    <section class="{{ $card }}">
+                        <div class="flex flex-col gap-1 mb-4">
+                            <h3 class="{{ $cardTitle }}">VI. Employment Information</h3>
+                            <p class="{{ $cardDesc }}">Tell us your current employment status and (if applicable) your employment details.</p>
+                        </div>
+
+                        {{-- Employment Status (encoded by alumna/alumnus) --}}
+                        <div class="{{ $grid2 }} mb-4">
+                            <div class="md:col-span-2">
+                                <x-input-label value="Employment Status" />
+                                @php($empStatus = old('employment_status', $employment_status ?? $profile->employment_status ?? $alumnus->employment_status ?? ''))
+                                <select name="employment_status" id="employment_status" class="{{ $selectBase }}">
+                                    <option value="">—</option>
+                                    <option value="employed" @selected($empStatus==='employed')>Employed</option>
+                                    <option value="self_employed" @selected($empStatus==='self_employed')>Self-employed / Freelancer</option>
+                                    <option value="business_owner" @selected($empStatus==='business_owner')>Business Owner</option>
+                                    <option value="unemployed" @selected($empStatus==='unemployed')>Unemployed</option>
+                                    <option value="student" @selected($empStatus==='student')>Student</option>
+                                    <option value="ofw" @selected($empStatus==='ofw')>OFW</option>
+                                    <option value="retired" @selected($empStatus==='retired')>Retired</option>
+                                    <option value="prefer_not_to_say" @selected($empStatus==='prefer_not_to_say')>Prefer not to say</option>
+                                </select>
+                                <x-input-error :messages="$errors->get('employment_status')" class="mt-2" />
+                            </div>
+                        </div>
+
+                        {{-- Employment rows --}}
+                        @php($empRows = old('employment'))
+
+                        @php(
+                            $empRows = is_array($empRows)
+                                ? $empRows
+                                : collect($employments ?? $employmentRows ?? $employment_items ?? [])->map(function ($e) {
+                                    return [
+                                        'position' => $e->position ?? '',
+                                        'company' => $e->company ?? '',
+                                        'org_type' => $e->org_type ?? '',
+                                        'office_address' => $e->office_address ?? '',
+                                        'office_contact' => $e->office_contact ?? '',
+                                        'office_email' => $e->office_email ?? '',
+                                        'start_date' => $e->start_date ?? '',
+                                        'licenses' => $e->licenses ?? '',
+                                        'achievements' => $e->achievements ?? '',
+                                    ];
+                                })->values()->toArray()
+                        )
+
+                        @php(
+                            $empRows = !empty($empRows)
+                                ? $empRows
+                                : [[
+                                    'position' => '',
+                                    'company' => '',
+                                    'org_type' => '',
+                                    'office_address' => '',
+                                    'office_contact' => '',
+                                    'office_email' => '',
+                                    'start_date' => '',
+                                    'licenses' => '',
+                                    'achievements' => '',
+                                ]]
+                        )
+
+                        <div id="empWrap" class="space-y-3">
+                            @foreach(($empRows ?? []) as $i => $row)
+                                <div class="emp-row rounded-lg border border-gray-200 p-4">
+                                    <div class="{{ $grid2 }}">
+                                        <div class="md:col-span-2">
+                                            <x-input-label value="Position" />
+                                            <x-text-input class="{{ $inputBase }}" name="employment[{{ $i }}][position]"
+                                                value="{{ $row['position'] ?? '' }}" placeholder="e.g., IT Officer, Teacher, Engineer" />
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <x-input-label value="Company / Organization" />
+                                            <x-text-input class="{{ $inputBase }}" name="employment[{{ $i }}][company]"
+                                                value="{{ $row['company'] ?? '' }}" placeholder="e.g., NDMU, ABC Corp" />
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Organization Type" />
+                                            @php($ot = $row['org_type'] ?? '')
+                                            <select name="employment[{{ $i }}][org_type]" class="{{ $selectBase }}">
+                                                <option value="">—</option>
+                                                <option value="government" @selected($ot==='government')>Government</option>
+                                                <option value="private" @selected($ot==='private')>Private</option>
+                                                <option value="ngo" @selected($ot==='ngo')>NGO</option>
+                                                <option value="academe" @selected($ot==='academe')>Academe</option>
+                                                <option value="self-employed" @selected($ot==='self-employed')>Self-employed</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Start Date" />
+                                            <x-text-input class="{{ $inputBase }}" type="date" name="employment[{{ $i }}][start_date]"
+                                                value="{{ $row['start_date'] ?? '' }}" />
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <x-input-label value="Office Address" />
+                                            <textarea class="{{ $inputBase }}" rows="3" name="employment[{{ $i }}][office_address]"
+                                                placeholder="Office Address">{{ $row['office_address'] ?? '' }}</textarea>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Office Contact" />
+                                            <x-text-input class="{{ $inputBase }}" name="employment[{{ $i }}][office_contact]"
+                                                value="{{ $row['office_contact'] ?? '' }}" placeholder="Contact number" />
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Office Email" />
+                                            <x-text-input class="{{ $inputBase }}" type="email" name="employment[{{ $i }}][office_email]"
+                                                value="{{ $row['office_email'] ?? '' }}" placeholder="email@company.com" />
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <x-input-label value="Licenses / Certifications" />
+                                            <x-text-input class="{{ $inputBase }}" name="employment[{{ $i }}][licenses]"
+                                                value="{{ $row['licenses'] ?? '' }}" placeholder="e.g., PRC, TESDA, CCNA" />
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <x-input-label value="Achievements" />
+                                            <x-text-input class="{{ $inputBase }}" name="employment[{{ $i }}][achievements]"
+                                                value="{{ $row['achievements'] ?? '' }}" placeholder="Awards, milestones, recognitions" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex justify-end">
+                                        <button type="button" class="remove-row text-sm text-rose-600 hover:text-rose-700 font-medium">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" id="addEmp"
+                                class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                <span>+ Add another employment</span>
+                            </button>
+                        </div>
+
+                        <template id="empTemplate">
+                            <div class="emp-row rounded-lg border border-gray-200 p-4">
+                                <div class="{{ $grid2 }}">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                                        <input class="{{ $inputBase }}" name="__NAME__[position]" placeholder="e.g., IT Officer, Teacher, Engineer" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Company / Organization</label>
+                                        <input class="{{ $inputBase }}" name="__NAME__[company]" placeholder="e.g., NDMU, ABC Corp" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Organization Type</label>
+                                        <select class="{{ $selectBase }}" name="__NAME__[org_type]">
+                                            <option value="">—</option>
+                                            <option value="government">Government</option>
+                                            <option value="private">Private</option>
+                                            <option value="ngo">NGO</option>
+                                            <option value="academe">Academe</option>
+                                            <option value="self-employed">Self-employed</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                        <input class="{{ $inputBase }}" type="date" name="__NAME__[start_date]" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Office Address</label>
+                                        <textarea class="{{ $inputBase }}" rows="3" name="__NAME__[office_address]" placeholder="Office Address"></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Office Contact</label>
+                                        <input class="{{ $inputBase }}" name="__NAME__[office_contact]" placeholder="Contact number" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Office Email</label>
+                                        <input class="{{ $inputBase }}" type="email" name="__NAME__[office_email]" placeholder="email@company.com" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Licenses / Certifications</label>
+                                        <input class="{{ $inputBase }}" name="__NAME__[licenses]" placeholder="e.g., PRC, TESDA, CCNA" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Achievements</label>
+                                        <input class="{{ $inputBase }}" name="__NAME__[achievements]" placeholder="Awards, milestones, recognitions" />
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 flex justify-end">
+                                    <button type="button" class="remove-row text-sm text-rose-600 hover:text-rose-700 font-medium">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </section>
+
                     {{-- CONSENT --}}
                     <section class="{{ $card }}">
                         <div class="flex flex-col gap-1 mb-4">
@@ -449,12 +659,16 @@
             const addComm = document.getElementById('addComm');
             const commTemplate = document.getElementById('commTemplate');
 
+            const empWrap = document.getElementById('empWrap');
+            const addEmp = document.getElementById('addEmp');
+            const empTemplate = document.getElementById('empTemplate');
+
             function escapeRegExp(str) {
                 return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             }
 
             function nextIndexFromInputs(container, prefix) {
-                const inputs = container.querySelectorAll('input[name^="' + prefix + '["]');
+                const inputs = container.querySelectorAll('input[name^="' + prefix + '["], textarea[name^="' + prefix + '["], select[name^="' + prefix + '["]');
                 let max = -1;
 
                 inputs.forEach((el) => {
@@ -484,7 +698,7 @@
                     const btn = e.target.closest('.remove-row');
                     if (!btn) return;
 
-                    const row = btn.closest('.post-row, .comm-row');
+                    const row = btn.closest('.post-row, .comm-row, .emp-row');
                     if (!row) return;
 
                     row.remove();
@@ -497,9 +711,11 @@
 
             addPost?.addEventListener('click', () => addRow(postWrap, postTemplate, 'post'));
             addComm?.addEventListener('click', () => addRow(commWrap, commTemplate, 'community'));
+            addEmp?.addEventListener('click', () => addRow(empWrap, empTemplate, 'employment'));
 
             bindRemove(postWrap, () => addRow(postWrap, postTemplate, 'post'));
             bindRemove(commWrap, () => addRow(commWrap, commTemplate, 'community'));
+            bindRemove(empWrap, () => addRow(empWrap, empTemplate, 'employment'));
         })();
     </script>
 </x-app-layout>

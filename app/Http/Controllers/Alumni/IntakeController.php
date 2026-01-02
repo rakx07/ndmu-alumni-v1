@@ -15,8 +15,9 @@ use App\Models\Education;
 use App\Models\Employment;
 use App\Models\CommunityInvolvement;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class IntakeController extends Controller
 {
@@ -58,10 +59,10 @@ class IntakeController extends Controller
             []
         );
 
-        $employment = Employment::firstOrCreate(
-            ['alumnus_id' => $alumnus->id],
-            []
-        );
+        // ✅ IMPORTANT FIX:
+        // DO NOT create a blank Employment row (it causes NULL rows in Filament).
+        // Instead, just load existing employments (can be 0..n rows).
+        $employments = Employment::where('alumnus_id', $alumnus->id)->get();
 
         // ✅ FIX: use enum values
         $ndmuContext = $this->ndmuContextFromTrack($alumnus->track);
@@ -91,7 +92,10 @@ class IntakeController extends Controller
             'profile' => $profile,
             'permanent' => $permanent,
             'current' => $current,
-            'employment' => $employment,
+
+            // ✅ pass collection for repeater
+            'employments' => $employments,
+
             'ndmuEducation' => $ndmuEducation,
             'postEducations' => $postEducations,
             'community' => $community,
@@ -125,6 +129,9 @@ class IntakeController extends Controller
             'email' => 'nullable|email|max:255',
             'facebook_handle' => 'nullable|string|max:255',
 
+            // ✅ Employment Status (optional; store if column exists)
+            'employment_status' => 'nullable|in:employed,self_employed,business_owner,unemployed,student,ofw,retired,prefer_not_to_say',
+
             // Addresses
             'permanent.line1' => 'nullable|string|max:255',
             'permanent.line2' => 'nullable|string|max:255',
@@ -150,16 +157,21 @@ class IntakeController extends Controller
             'ndmu.thesis_title' => 'nullable|string|max:255',
             'ndmu.remarks' => 'nullable|string|max:255',
 
-            // Employment (single row)
-            'employment.position' => 'nullable|string|max:255',
-            'employment.company' => 'nullable|string|max:255',
-            'employment.org_type' => 'nullable|in:Government,Private,NGO,Academe,Self-employed,Business Owner,Student,Others',
-            'employment.office_address' => 'nullable|string|max:255',
-            'employment.office_contact' => 'nullable|string|max:255',
-            'employment.office_email' => 'nullable|email|max:255',
-            'employment.start_date' => 'nullable|date',
-            'employment.licenses' => 'nullable|string|max:255',
-            'employment.achievements' => 'nullable|string|max:255',
+            // ✅ Employments (MULTIPLE ROWS)
+            'employment' => 'array',
+            'employment.*.position' => 'nullable|string|max:255',
+            'employment.*.company' => 'nullable|string|max:255',
+
+            // ✅ MUST match your DB enum values:
+            // enum('government','private','ngo','academe','self-employed', ...)
+            'employment.*.org_type' => 'nullable|in:government,private,ngo,academe,self-employed',
+
+            'employment.*.office_address' => 'nullable|string',
+            'employment.*.office_contact' => 'nullable|string|max:255',
+            'employment.*.office_email' => 'nullable|email|max:255',
+            'employment.*.start_date' => 'nullable|date',
+            'employment.*.licenses' => 'nullable|string|max:255',
+            'employment.*.achievements' => 'nullable|string|max:255',
 
             // Post-NDMU education (multiple rows)
             'post.*.degree' => 'nullable|string|max:255',
@@ -194,7 +206,7 @@ class IntakeController extends Controller
                 'student_number' => $validated['student_number'] ?? null,
             ]);
 
-            AlumniProfile::updateOrCreate(
+            $profile = AlumniProfile::updateOrCreate(
                 ['alumnus_id' => $alumnus->id],
                 [
                     'contact_number' => $validated['contact_number'] ?? null,
@@ -202,6 +214,12 @@ class IntakeController extends Controller
                     'facebook_handle' => $validated['facebook_handle'] ?? null,
                 ]
             );
+
+            // ✅ Save employment_status if your profiles table has this column
+            if (Schema::hasColumn($profile->getTable(), 'employment_status')) {
+                $profile->employment_status = $validated['employment_status'] ?? null;
+                $profile->save();
+            }
 
             AlumniAddress::updateOrCreate(
                 ['alumnus_id' => $alumnus->id, 'type' => 'permanent'],
@@ -213,9 +231,8 @@ class IntakeController extends Controller
                 $validated['current'] ?? []
             );
 
-            // ✅ FIX: NDMU context based on track
+            // ✅ NDMU context based on track
             $ndmuContext = $this->ndmuContextFromTrack($validated['track']);
-
             $ndmu = $validated['ndmu'] ?? [];
 
             Education::updateOrCreate(
@@ -232,24 +249,43 @@ class IntakeController extends Controller
                 ]
             );
 
-            // Employment
-            $emp = $validated['employment'] ?? [];
-            Employment::updateOrCreate(
-                ['alumnus_id' => $alumnus->id],
-                [
-                    'position' => $emp['position'] ?? null,
-                    'company' => $emp['company'] ?? null,
-                    'org_type' => $emp['org_type'] ?? null,
-                    'office_address' => $emp['office_address'] ?? null,
-                    'office_contact' => $emp['office_contact'] ?? null,
-                    'office_email' => $emp['office_email'] ?? null,
-                    'start_date' => $emp['start_date'] ?? null,
-                    'licenses' => $emp['licenses'] ?? null,
-                    'achievements' => $emp['achievements'] ?? null,
-                ]
-            );
+            /**
+             * ✅ EMPLOYMENTS (MULTI ROWS) - FIX
+             * Remove old then insert non-empty rows
+             */
+            Employment::where('alumnus_id', $alumnus->id)->delete();
 
-            // ✅ FIX: Replace post/continuing rows using enum values
+            foreach (($validated['employment'] ?? []) as $row) {
+                $hasAny =
+                    !empty($row['position'] ?? null) ||
+                    !empty($row['company'] ?? null) ||
+                    !empty($row['org_type'] ?? null) ||
+                    !empty($row['office_address'] ?? null) ||
+                    !empty($row['office_contact'] ?? null) ||
+                    !empty($row['office_email'] ?? null) ||
+                    !empty($row['start_date'] ?? null) ||
+                    !empty($row['licenses'] ?? null) ||
+                    !empty($row['achievements'] ?? null);
+
+                if (! $hasAny) {
+                    continue;
+                }
+
+                Employment::create([
+                    'alumnus_id'     => $alumnus->id,
+                    'position'       => $row['position'] ?? null,
+                    'company'        => $row['company'] ?? null,
+                    'org_type'       => $row['org_type'] ?? null,
+                    'office_address' => $row['office_address'] ?? null,
+                    'office_contact' => $row['office_contact'] ?? null,
+                    'office_email'   => $row['office_email'] ?? null,
+                    'start_date'     => $row['start_date'] ?? null,
+                    'licenses'       => $row['licenses'] ?? null,
+                    'achievements'   => $row['achievements'] ?? null,
+                ]);
+            }
+
+            // ✅ Replace post/continuing rows using enum values
             Education::where('alumnus_id', $alumnus->id)
                 ->whereIn('context', ['post_ndmu', 'continuing'])
                 ->delete();
@@ -258,7 +294,7 @@ class IntakeController extends Controller
                 if (!empty($row['degree']) || !empty($row['institution']) || !empty($row['year'])) {
                     Education::create([
                         'alumnus_id' => $alumnus->id,
-                        'context' => 'post_ndmu', // you can change to 'continuing' if you add a toggle later
+                        'context' => 'post_ndmu',
                         'level_label' => $row['degree'] ?? null,
                         'institution_name' => $row['institution'] ?? null,
                         'remarks' => $row['year'] ?? null,
