@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Alumni\IntakeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,6 +32,9 @@ Route::get('/alumni/dashboard', function () {
     return view('alumni.dashboard');
 })->middleware(['auth'])->name('alumni.dashboard');
 
-
+Route::middleware(['auth'])->group(function () {
+    Route::get('/alumni/intake', [IntakeController::class, 'edit'])->name('alumni.intake');
+    Route::post('/alumni/intake', [IntakeController::class, 'update'])->name('alumni.intake.update');
+});
 
 require __DIR__.'/auth.php';
