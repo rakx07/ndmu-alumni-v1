@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,6 +28,17 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+
+            // ✅ Use your Filament theme (built by Vite)
+            ->viteTheme('resources/css/filament/admin/theme.css')
+
+            // ✅ Force Filament to load Inter from a LOCAL stylesheet (NOT Bunny)
+            ->font(
+                'Inter',
+                url: asset('css/fonts.css'),
+                provider: LocalFontProvider::class,
+            )
+
             ->colors([
                 'primary' => Color::Amber,
             ])
