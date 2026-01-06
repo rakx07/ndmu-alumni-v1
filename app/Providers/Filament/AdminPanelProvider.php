@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            
 
             /**
              * ✅ Use system font but load via LOCAL provider (prevents Bunny injection)

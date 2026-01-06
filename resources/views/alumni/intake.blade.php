@@ -3,7 +3,7 @@
     <x-slot name="header">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                <h2 class="font-semibold text-xl text-green-900 leading-tight">
                     Alumni Tracer Intake Form
                 </h2>
                 <p class="mt-1 text-sm text-gray-600">
@@ -15,15 +15,19 @@
 
     @php
         /**
-         * UI helpers (Tailwind)
+         * UI helpers (Tailwind) — NDMU Green & Gold
          */
         $inputBase  = 'w-full rounded-lg border-gray-300 focus:border-green-700 focus:ring-green-700';
         $selectBase = 'w-full rounded-lg border-gray-300 focus:border-green-700 focus:ring-green-700';
-        $card = 'rounded-xl border border-gray-200 bg-white p-5 sm:p-6';
-        $cardTitle = 'text-base sm:text-lg font-semibold text-gray-900';
-        $cardDesc = 'text-sm text-gray-600';
-        $grid2 = 'grid grid-cols-1 md:grid-cols-2 gap-4';
-        $grid3 = 'grid grid-cols-1 md:grid-cols-3 gap-3';
+        $card       = 'rounded-xl border border-gray-200 bg-white p-5 sm:p-6';
+        $cardTitle  = 'text-base sm:text-lg font-semibold text-gray-900';
+        $cardDesc   = 'text-sm text-gray-600';
+        $grid2      = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+        $grid3      = 'grid grid-cols-1 md:grid-cols-3 gap-3';
+
+        // Helper: safe id/name extraction for object/array values
+        $optId = function ($x) { return is_object($x) ? ($x->id ?? null) : (is_array($x) ? ($x['id'] ?? null) : null); };
+        $optName = function ($x) { return is_object($x) ? ($x->name ?? '') : (is_array($x) ? ($x['name'] ?? '') : ''); };
     @endphp
 
     <div class="py-8">
@@ -210,10 +214,14 @@
                                 <select name="ndmu[college_id]" class="{{ $selectBase }}">
                                     <option value="">—</option>
                                     @foreach(($colleges ?? []) as $c)
-                                        <option value="{{ $c->id }}"
-                                            @selected(old('ndmu.college_id', $ndmuEducation->college_id ?? null) == $c->id)>
-                                            {{ $c->name }}
-                                        </option>
+                                        @php($cid = $optId($c))
+                                        @php($cname = $optName($c))
+                                        @if($cid !== null)
+                                            <option value="{{ $cid }}"
+                                                @selected(old('ndmu.college_id', $ndmuEducation->college_id ?? null) == $cid)>
+                                                {{ $cname }}
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -223,10 +231,14 @@
                                 <select name="ndmu[program_id]" class="{{ $selectBase }}">
                                     <option value="">—</option>
                                     @foreach(($programs ?? []) as $p)
-                                        <option value="{{ $p->id }}"
-                                            @selected(old('ndmu.program_id', $ndmuEducation->program_id ?? null) == $p->id)>
-                                            {{ $p->name }}
-                                        </option>
+                                        @php($pid = $optId($p))
+                                        @php($pname = $optName($p))
+                                        @if($pid !== null)
+                                            <option value="{{ $pid }}"
+                                                @selected(old('ndmu.program_id', $ndmuEducation->program_id ?? null) == $pid)>
+                                                {{ $pname }}
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -236,10 +248,14 @@
                                 <select name="ndmu[strand_id]" class="{{ $selectBase }}">
                                     <option value="">—</option>
                                     @foreach(($strands ?? []) as $s)
-                                        <option value="{{ $s->id }}"
-                                            @selected(old('ndmu.strand_id', $ndmuEducation->strand_id ?? null) == $s->id)>
-                                            {{ $s->name }}
-                                        </option>
+                                        @php($sid = $optId($s))
+                                        @php($sname = $optName($s))
+                                        @if($sid !== null)
+                                            <option value="{{ $sid }}"
+                                                @selected(old('ndmu.strand_id', $ndmuEducation->strand_id ?? null) == $sid)>
+                                                {{ $sname }}
+                                            </option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -272,7 +288,6 @@
                         </div>
 
                         @php($postRows = old('post'))
-
                         @php(
                             $postRows = is_array($postRows)
                                 ? $postRows
@@ -284,12 +299,7 @@
                                     ];
                                 })->values()->toArray()
                         )
-
-                        @php(
-                            $postRows = !empty($postRows)
-                                ? $postRows
-                                : [['degree' => '', 'institution' => '', 'year' => '']]
-                        )
+                        @php($postRows = !empty($postRows) ? $postRows : [['degree' => '', 'institution' => '', 'year' => '']])
 
                         <div id="postWrap" class="space-y-3">
                             @foreach(($postRows ?? [['degree'=>'','institution'=>'','year'=>'']]) as $i => $row)
@@ -314,8 +324,7 @@
 
                         <div class="mt-4">
                             <button type="button" id="addPost"
-                                class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900"
-
+                                class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900">
                                 <span>+ Add another</span>
                             </button>
                         </div>
@@ -344,7 +353,6 @@
                         </div>
 
                         @php($commRows = old('community'))
-
                         @php(
                             $commRows = is_array($commRows)
                                 ? $commRows
@@ -356,12 +364,7 @@
                                     ];
                                 })->values()->toArray()
                         )
-
-                        @php(
-                            $commRows = !empty($commRows)
-                                ? $commRows
-                                : [['organization' => '', 'role' => '', 'years_active' => '']]
-                        )
+                        @php($commRows = !empty($commRows) ? $commRows : [['organization' => '', 'role' => '', 'years_active' => '']])
 
                         <div id="commWrap" class="space-y-3">
                             @foreach(($commRows ?? [['organization'=>'','role'=>'','years_active'=>'']]) as $i => $row)
@@ -386,8 +389,7 @@
 
                         <div class="mt-4">
                             <button type="button" id="addComm"
-                               class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900"
-
+                                class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900">
                                 <span>+ Add another</span>
                             </button>
                         </div>
@@ -408,14 +410,13 @@
                         </template>
                     </section>
 
-                    {{-- ✅ EMPLOYMENT STATUS + EMPLOYMENTS (NEW) --}}
+                    {{-- EMPLOYMENT --}}
                     <section class="{{ $card }}">
                         <div class="flex flex-col gap-1 mb-4">
                             <h3 class="{{ $cardTitle }}">VI. Employment Information</h3>
                             <p class="{{ $cardDesc }}">Tell us your current employment status and (if applicable) your employment details.</p>
                         </div>
 
-                        {{-- Employment Status (encoded by alumna/alumnus) --}}
                         <div class="{{ $grid2 }} mb-4">
                             <div class="md:col-span-2">
                                 <x-input-label value="Employment Status" />
@@ -435,9 +436,7 @@
                             </div>
                         </div>
 
-                        {{-- Employment rows --}}
                         @php($empRows = old('employment'))
-
                         @php(
                             $empRows = is_array($empRows)
                                 ? $empRows
@@ -455,7 +454,6 @@
                                     ];
                                 })->values()->toArray()
                         )
-
                         @php(
                             $empRows = !empty($empRows)
                                 ? $empRows
@@ -549,8 +547,7 @@
 
                         <div class="mt-4">
                             <button type="button" id="addEmp"
-                               class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900"
-
+                                class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900">
                                 <span>+ Add another employment</span>
                             </button>
                         </div>
@@ -671,7 +668,9 @@
             }
 
             function nextIndexFromInputs(container, prefix) {
-                const inputs = container.querySelectorAll('input[name^="' + prefix + '["], textarea[name^="' + prefix + '["], select[name^="' + prefix + '["]');
+                const inputs = container.querySelectorAll(
+                    'input[name^="' + prefix + '["], textarea[name^="' + prefix + '["], select[name^="' + prefix + '["]'
+                );
                 let max = -1;
 
                 inputs.forEach((el) => {
