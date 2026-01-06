@@ -29,13 +29,15 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
 
-            // ✅ Use your Filament theme (built by Vite)
-            ->viteTheme('resources/css/filament/admin/theme.css')
-
-            // ✅ Force Filament to load Inter from a LOCAL stylesheet (NOT Bunny)
+            /**
+             * ✅ Use system font but load via LOCAL provider (prevents Bunny injection)
+             * family: system-ui
+             * url: local css file inside /public
+             * provider: LocalFontProvider
+             */
             ->font(
-                'Inter',
-                url: asset('css/fonts.css'),
+                'system-ui',
+                url: asset('css/filament-fonts.css'),
                 provider: LocalFontProvider::class,
             )
 

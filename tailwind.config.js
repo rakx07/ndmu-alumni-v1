@@ -8,15 +8,25 @@ export default {
     './storage/framework/views/*.php',
     './resources/views/**/*.blade.php',
   ],
-
   theme: {
     extend: {
       fontFamily: {
-        // Use locally-hosted Inter (falls back to system sans)
-        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        sans: [
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Ubuntu',
+          'Cantarell',
+          'Noto Sans',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+          ...defaultTheme.fontFamily.sans,
+        ],
       },
     },
   },
-
   plugins: [forms],
 };
