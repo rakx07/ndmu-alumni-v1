@@ -17,8 +17,8 @@
         /**
          * UI helpers (Tailwind)
          */
-        $inputBase = 'w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500';
-        $selectBase = 'w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500';
+        $inputBase  = 'w-full rounded-lg border-gray-300 focus:border-green-700 focus:ring-green-700';
+        $selectBase = 'w-full rounded-lg border-gray-300 focus:border-green-700 focus:ring-green-700';
         $card = 'rounded-xl border border-gray-200 bg-white p-5 sm:p-6';
         $cardTitle = 'text-base sm:text-lg font-semibold text-gray-900';
         $cardDesc = 'text-sm text-gray-600';
@@ -314,7 +314,8 @@
 
                         <div class="mt-4">
                             <button type="button" id="addPost"
-                                class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                                class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900"
+
                                 <span>+ Add another</span>
                             </button>
                         </div>
@@ -385,7 +386,8 @@
 
                         <div class="mt-4">
                             <button type="button" id="addComm"
-                                class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                               class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900"
+
                                 <span>+ Add another</span>
                             </button>
                         </div>
@@ -547,7 +549,8 @@
 
                         <div class="mt-4">
                             <button type="button" id="addEmp"
-                                class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                               class="inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900"
+
                                 <span>+ Add another employment</span>
                             </button>
                         </div>
@@ -626,7 +629,7 @@
 
                         <label class="flex items-start gap-3 rounded-lg border border-gray-200 p-4 bg-gray-50">
                             <input type="checkbox" name="consent" value="1"
-                                   class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                   class="mt-1 rounded border-gray-300 text-green-800 focus:ring-green-700"
                                    required
                                    @checked(old('consent'))>
                             <span class="text-sm text-gray-700 leading-relaxed">
